@@ -17,19 +17,19 @@ class ImageProcessing():
 
     def threshold(self):
         self.binarisedImages = []
-        self.dilatedImages = []
-        self.gradientImages = []
+        #self.gradientImages = []
         #applying binarisation to all images:
-        kernel_size = 5
-        kernel = np.ones((kernel_size, kernel_size), np.uint8) #simple homogeneous kernel
+        self.kernel_size = 5
+        self.kernel = np.ones((self.kernel_size, self.kernel_size), np.uint8) #simple homogeneous kernel
         for image in self.cvImagesGrey:
             #selecting the binary inverted threshold (assigns ret to the threshold that was used and thresh to the thresholded image):
             self.ret, self.threshImage = cv2.threshold(image, 190, 255, cv2.THRESH_BINARY)
-            self.gradient = cv2.morphologyEx(self.threshImage, cv2.MORPH_GRADIENT, kernel)
+            #self.gradient = cv2.morphologyEx(self.threshImage,cv2.MORPH_GRADIENT, kernel)
             self.binarisedImages.append(self.threshImage) 
-            self.gradientImages.append(self.gradient)
+            #self.gradientImages.append(self.gradient)
 
-        print(self.binarisedImages)
+        #TESTING PURPOSES
+        #print(self.binarisedImages)
         cv2.imshow('Binarisation', self.binarisedImages[-1])
         cv2.waitKey(0)
         cv2.destroyWindow('Binarisation')
@@ -38,14 +38,17 @@ class ImageProcessing():
         # cv2.destroyWindow('Gradient')
     
     def edgeDetection(self):
-        self.cannyImages = []
-        for Binarisedimage in self.binarisedImages:
-            cannyImage = cv2.Canny(Binarisedimage, 50, 100)
-            contours, hierarchy = cv2.findContours(cannyImage, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-            cv2.drawContours(cannyImage, contours, -1, (0, 255, 0), 1)
-            self.cannyImages.append(cannyImage)
+        self.contouredImages = []
+        for i, image in enumerate(self.cvImages):
+            img_copy = image.copy()
+            contours, hierarchy = cv2.findContours(self.binarisedImages[i], cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+            contoured_img = cv2.drawContours(img_copy, contours, -1, (0, 255, 0), 2)
+            self.contouredImages.append(contoured_img)
+
+            #make calculations to find important information of contours
             
-        cv2.imshow('Edge Detection', self.cannyImages[-1])
+        #TESTING PURPOSES
+        cv2.imshow('Edge Detection', self.contouredImages[-1])
         cv2.waitKey(0)
         cv2.destroyWindow('Edge Detection')
 
@@ -54,6 +57,7 @@ class ImageProcessing():
 
 
 ip = ImageProcessing()
+print(len(ip.images))
 ip.threshold()
 ip.edgeDetection()
 
