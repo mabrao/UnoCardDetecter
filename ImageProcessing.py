@@ -1,7 +1,6 @@
 import cv2
 import os
 import numpy as np
-from scipy.spatial import distance
 
 
 
@@ -74,17 +73,18 @@ class ImageProcessing():
         cv2.imshow('Cropped', self.croppedCards[9])
         cv2.waitKey(0)
         cv2.destroyWindow('Cropped')
-        
-    def getCardNumberInfo(self):
+
+    
+    def getCentralLogo(self):
         '''
-        This method will return a dictionary with features
-        for each number on the cards, this only works
-        for blue, green or red cards. It will not work for
-        the black cards.
+        This method returns the central logo for
+        all cards.
         '''
-        self.central_logo = []
-        for i, card in enumerate(self.croppedCards):
-            height, width = card.shape[:2] #getting the card shape
+        central_logo = []
+        for card in (self.croppedCards):
+
+            #getting the card height and width:
+            height, width = card.shape[:2] 
 
             #creating new variables for cropping relative to the size of the image
             new_x = (width//3)
@@ -93,21 +93,45 @@ class ImageProcessing():
             extra_size_y = height//12
 
             #create new image with just the central information in the card
-            central_logo = card[(new_y - extra_size_y):(2*(new_y) + extra_size_y), (new_x - extra_size_x):(2*(new_x) + extra_size_x)]
-            self.central_logo.append(central_logo)
-            
-            cv2.imshow('Cropped Number', central_logo)
-            cv2.waitKey(0)
-            cv2.destroyWindow('Cropped Number')
-
-
-
+            central_logo.append(card[(new_y - extra_size_y):(2*(new_y) + extra_size_y), (new_x - extra_size_x):(2*(new_x) + extra_size_x)])
         
+        return central_logo
+        
+    def getCardColor(self):
+        '''
+        This method will return a list with the
+        average color space for each card.
+        '''
 
+        color_spaces = []
+        #THESE FOR LOOPS NEED TO OPTIMIZED LATER
+        for card in self.croppedCards:
+            hsv_card = cv2.cvtColor(card, cv2.COLOR_BGR2HSV)
 
+            h,s,v = cv2.split(hsv_card)
+
+            for i in range(0, len(h)):
+                sum_h, sum_s, sum_v = 0, 0, 0
+                for h1,s1,v1 in zip(h[i], s[i], v[i]):
+                    sum_h += h1
+                    sum_s += s1
+                    sum_v += v1
+
+                avg_h = sum_h//len(h)
+                avg_s = sum_h//len(h)
+                avg_v = sum_h//len(h)
+
+                color_spaces.append(np.array([avg_h, avg_s, avg_v]))
+                # print(f'{sum_h = } {sum_s = } {sum_v = }')
+                # print(f'{len(h) = } {len(s) = } {len(v) = }')
+                # print(f'{avg_h = } {avg_s = } {avg_v = }')
+        
+        return color_spaces
+            
+            
 
 ip = ImageProcessing()
 ip.threshold(ip.cvImages)
 ip.OuterEdgeDetection()
 ip.cropCards()
-ip.getCardNumberInfo()
+ip.getCardColor()
