@@ -28,12 +28,6 @@ class ImageProcessing():
             #selecting the binary inverted threshold (assigns ret to the threshold that was used and thresh to the thresholded image):
             self.ret, self.threshImage = cv2.threshold(image, 180, 255, cv2.THRESH_BINARY)
             self.binarisedImages.append(self.threshImage)
-        
-
-        #TESTING PURPOSES
-        cv2.imshow('Binarisation', self.binarisedImages[9])
-        cv2.waitKey(0)
-        cv2.destroyWindow('Binarisation')
 
         return self.binarisedImages
 
@@ -56,31 +50,26 @@ class ImageProcessing():
             for c in contour: #iterates through each point (x,y) of the contours array
                 [x,y,w,h] = cv2.boundingRect(c)
                 self.cropPositions.append([x,y,w,h])
+        
+        return self.contourPoints
 
-        #TESTING PURPOSES
-        cv2.imshow('Edge Detection', self.contouredImages[9])
-        cv2.waitKey(0)
-        cv2.destroyWindow('Edge Detection')
-    
+
     def cropCards(self):
         self.croppedCards = []
         for index, image in enumerate(self.cvImages):
             x,y,w,h = self.cropPositions[index]
             card = image[y:y+h, x:x+w]
             self.croppedCards.append(card)
-
-        #TESTING PURPOSES
-        cv2.imshow('Cropped', self.croppedCards[9])
-        cv2.waitKey(0)
-        cv2.destroyWindow('Cropped')
-
+        
+        return self.croppedCards
     
+
     def getCentralLogo(self):
         '''
         This method returns the central logo for
         all cards.
         '''
-        central_logo = []
+        self.central_logo = []
         for card in (self.croppedCards):
 
             #getting the card height and width:
@@ -93,10 +82,11 @@ class ImageProcessing():
             extra_size_y = height//12
 
             #create new image with just the central information in the card
-            central_logo.append(card[(new_y - extra_size_y):(2*(new_y) + extra_size_y), (new_x - extra_size_x):(2*(new_x) + extra_size_x)])
+            self.central_logo.append(card[(new_y - extra_size_y):(2*(new_y) + extra_size_y), (new_x - extra_size_x):(2*(new_x) + extra_size_x)])
         
-        return central_logo
+        return self.central_logo
         
+
     def getCardColor(self):
         '''
         This method will return a list with the
@@ -110,28 +100,39 @@ class ImageProcessing():
 
             h,s,v = cv2.split(hsv_card)
 
-            for i in range(0, len(h)):
-                sum_h, sum_s, sum_v = 0, 0, 0
-                for h1,s1,v1 in zip(h[i], s[i], v[i]):
-                    sum_h += h1
-                    sum_s += s1
-                    sum_v += v1
-
-                avg_h = sum_h//len(h)
-                avg_s = sum_h//len(h)
-                avg_v = sum_h//len(h)
-
+            for h1,s1,v1 in zip(h,s,v):
+                avg_h, avg_s, avg_v = (np.sum(h1))//len(h1), (np.sum(s1))//len(s1), (np.sum(v1))//len(v1)
                 color_spaces.append(np.array([avg_h, avg_s, avg_v]))
-                # print(f'{sum_h = } {sum_s = } {sum_v = }')
-                # print(f'{len(h) = } {len(s) = } {len(v) = }')
-                # print(f'{avg_h = } {avg_s = } {avg_v = }')
-        
-        return color_spaces
-            
-            
 
-ip = ImageProcessing()
-ip.threshold(ip.cvImages)
-ip.OuterEdgeDetection()
-ip.cropCards()
-ip.getCardColor()
+        return color_spaces
+
+
+    def showCards(self, imageNumber):
+        '''
+        this function will show the 
+        operations done in all cards.
+        It takes as an argument the
+        number of the card that is going
+        to be shown.
+        '''
+        #Thresholding
+        cv2.imshow('Binarisation', self.binarisedImages[imageNumber])
+        cv2.waitKey(0)
+        cv2.destroyWindow('Binarisation')
+
+        #outer edge detection
+        cv2.imshow('Edge Detection', self.contouredImages[imageNumber])
+        cv2.waitKey(0)
+        cv2.destroyWindow('Edge Detection')
+
+        #cropping the card on the outer edge
+        cv2.imshow('Cropped', self.croppedCards[imageNumber])
+        cv2.waitKey(0)
+        cv2.destroyWindow('Cropped')
+
+        #central logo of cards
+        cv2.imshow('Central Logo', self.central_logo[imageNumber])
+        cv2.waitKey(0)
+        cv2.destroyWindow('Central Logo')
+
+
