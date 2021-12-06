@@ -73,32 +73,6 @@ class ImageProcessing():
         return central_logo
         
 
-#     def getCardColor(self):
-#         '''
-#         This method will return a list with the
-#         average color space for each card.
-#         '''
-
-#         hsv_cards = []
-#         for card in self.croppedCards:
-#             hsv_card = np.array(cv2.cvtColor(card, cv2.COLOR_BGR2HSV))
-#             hsv_card = hsv_card.reshape(-1,3) #converting to a 1D array
-#             for h,s,v in hsv_card:
-#                 print(h,s,v)
-
-#             #h,s,v = (int((h/255.0)*100.0)), (int((s/255.0)*100.0)), (int((v/255.0)*100.0))
-            
-#             # for j in range(len(h)):
-#             #     print(h[i][j],s[i][j],v[i][j])
-#             #     h1,s1,v1 = (int((h[i][j]/255.0)*100.0)), (int((s[i][j]/255.0)*100.0)), (int((v[i][j]/255.0)*100.0))
-#             #     hsv_cards.append([h1, s1, v1])
-
-#             # h1,s1,v1 = (int((h/255.0)*100.0)), (int((s/255.0)*100.0)), (int((v/255.0)*100.0))
-#             # hsv_cards.append([h1, s1, v1])
-    
-#         return hsv_cards
-
-
     def showCards(self, imageNumber):
         '''
         this function will show the 
