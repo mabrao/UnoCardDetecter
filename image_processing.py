@@ -7,8 +7,12 @@ import numpy as np
 class ImageProcessing():
     def __init__(self):
         self.cvImages = []
+        self.desImages = []
         for filename in os.listdir('./images'):
             self.cvImages.append(cv2.imread('./images/{}'.format(filename))) #load and append image to cvImages
+        for filename in os.listdir('./img_descriptor_train'):
+            self.desImages.append(cv2.imread('./img_descriptor_train/{}'.format(filename))) #load and append image to desImages
+
 
     def threshold(self, image):
         '''
@@ -99,7 +103,7 @@ class ImageProcessing():
     
     def findKeyDes(self):
         desList = []
-        for img in self.cvImages:
+        for img in self.desImages:
             #get the cropped card from image
             croppedCard = self.cropCards(img)
             kp,des = self.createOrbCard(croppedCard)
@@ -174,10 +178,10 @@ class ImageProcessing():
         resBlue = cv2.bitwise_and(imageHSV, imageHSV, mask = blueMask)
         resGreen = cv2.bitwise_and(imageHSV, imageHSV, mask = greenMask)
 
-        cv2.imshow('red res', resRed)
-        cv2.imshow('yellow res', resYellow)
-        cv2.imshow('blue res', resBlue)
-        cv2.imshow('green res', resGreen)
+        # cv2.imshow('red res', resRed)
+        # cv2.imshow('yellow res', resYellow)
+        # cv2.imshow('blue res', resBlue)
+        # cv2.imshow('green res', resGreen)
 
         #convert masks to 3 channels:
         # redMask = cv2.cvtColor(redMask, cv2.COLOR_GRAY2BGR)
@@ -213,17 +217,20 @@ class ImageProcessing():
         ###DEBUGGING###
 
         if len(biggestContours) != 0:
-            print(max(biggestContours))
+            #print(max(biggestContours))
+            return max(biggestContours)
+        else:
+            return 'Failed'
 
-        img_copy1 = image.copy()
-        img_copy2 = image.copy()
-        img_copy3 = image.copy()
-        img_copy4 = image.copy()
+        # img_copy1 = image.copy()
+        # img_copy2 = image.copy()
+        # img_copy3 = image.copy()
+        # img_copy4 = image.copy()
 
-        contoured_red = cv2.drawContours(img_copy1, contoursRed, -1, (0, 255, 0), 2)
-        contoured_yellow = cv2.drawContours(img_copy2, contoursYellow, -1, (0, 255, 0), 2)
-        contoured_blue = cv2.drawContours(img_copy3, contoursBlue, -1, (0, 255, 0), 2)
-        contoured_green = cv2.drawContours(img_copy3, contoursGreen, -1, (0, 255, 0), 2)
+        # contoured_red = cv2.drawContours(img_copy1, contoursRed, -1, (0, 255, 0), 2)
+        # contoured_yellow = cv2.drawContours(img_copy2, contoursYellow, -1, (0, 255, 0), 2)
+        # contoured_blue = cv2.drawContours(img_copy3, contoursBlue, -1, (0, 255, 0), 2)
+        # contoured_green = cv2.drawContours(img_copy3, contoursGreen, -1, (0, 255, 0), 2)
         # cv2.imshow('red contour', contoured_red)
         # cv2.imshow('yellow contour', contoured_yellow)
         # cv2.imshow('blue contour', contoured_blue)
