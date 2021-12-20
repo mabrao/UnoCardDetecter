@@ -60,6 +60,7 @@ class MachineLearning():
             # print(id)
             if id != -1:
                 cv2.putText(imgOriginal, self.targetNames[id], (50,50), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
+                print(self.targetNames[id])
             
             cv2.imshow('frame', imgOriginal)
             key = cv2.waitKey(1)
@@ -67,6 +68,18 @@ class MachineLearning():
             if (key == 27):
                 break
     
+    def videoStream(self):
+        vc = cv2.VideoCapture(0)
+
+        self.ip.createHSVTrackbars() #used for calibration
+
+        while True:
+            rval, frame = vc.read()
+            cv2.imshow('frame', frame)
+            key = cv2.waitKey(1)
+            self.ip.findColor(frame)
+            if key == 27:
+                break
     
     #2 things left to do:
 
