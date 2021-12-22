@@ -258,3 +258,76 @@ def cropVideoStream(self):
 # print(ml.ip.getAreaList(ml.ip.cropCards(ml.ip.cvImages[4])))
 # print(ml.ip.getRelativeLengthList(ml.ip.cropCards(ml.ip.cvImages[4])))
 # print(ml.ip.getShapeComplexityList(ml.ip.cropCards(ml.ip.cvImages[4])))
+
+
+    def colorSeparation(self, croppedCard):
+        '''
+        Finding the dominant colors of
+        the card using KMeans clusters.
+        This will return an r,g,b tuple.
+        '''
+        #converting the card image to RGB
+        #print(type(croppedCard)) #debug
+        croppedCard = cv2.cvtColor(croppedCard, cv2.COLOR_BGR2HSV)
+
+        height, width, _ = np.shape(croppedCard)
+
+        #reshaping the image to be a simple list of rgb pixels
+        image = np.float32(croppedCard.reshape(height * width, 3))
+
+        #define the criteria for KMeans
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 200, 1.0)
+
+        num_clusters = 3
+        attempts = 200
+        
+        ret, label, center = cv2.kmeans(image,num_clusters,None,criteria,attempts,cv2.KMEANS_PP_CENTERS)
+
+        #converting the center of data back into uint8
+        center = np.uint8(center)
+        for r,g,b in center:
+            if (r < 60) and (g < 60) and (b < 60): ##THIS CAN BE OPTIMIZED TO 2 LINES
+                # print(f'{r = } {g = } {b = }')
+                # print('black')
+                pass
+            elif (r > 190) and (g > 190) and (b > 190):
+                # print(f'{r = } {g = } {b = }')
+                # print('white')
+                pass
+            else:
+                #print(f'{r = } {g = } {b = }')
+                return (r,g,b)
+
+    def getCardColor(self, croppedCard):
+        '''
+        This method will be returning a string
+        with the color of the card in 
+        all lower case letters.
+        '''
+        #setting ranges for all possible card colors in rgb
+        red_lower = (136, 87, 100)
+        red_upper = (180, 255, 255)
+
+        green_lower = (25, 52, 72)
+        green_upper = (102, 255, 255)
+
+        blue_lower = (94, 80, 2)
+        blue_upper = (120, 255, 255)
+
+        yellow_lower = (40,162,210)
+        yellow_upper = (70,200,255)
+        
+        
+        
+        r,g,b = self.colorSeparation(croppedCard)
+        if (r in range(red_lower[0], red_upper[0])) and (g in range(red_lower[1], red_upper[1])) and (b in range(red_lower[2], red_upper[2])):
+            return 'red'
+        elif (r in range(green_lower[0], green_upper[0])) and (g in range(green_lower[1], green_upper[1])) and (b in range(green_lower[2], green_upper[2])):
+            return 'green'
+        elif (r in range(blue_lower[0], blue_upper[0])) and (g in range(blue_lower[1], blue_upper[1])) and (b in range(blue_lower[2], blue_upper[2])):
+            return 'blue'
+        elif (r in range(yellow_lower[0], yellow_upper[0])) and (g in range(yellow_lower[1], yellow_upper[1])) and (b in range(yellow_lower[2], yellow_upper[2])):
+            return 'yellow'
+        else:
+            return 'black'
+

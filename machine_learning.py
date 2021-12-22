@@ -1,7 +1,11 @@
 import image_processing
 import numpy as np
 import cv2
-
+import pickle
+from reusable_functions import getCardColor
+from sklearn.cluster import KMeans
+from sklearn.neighbors import KNeighborsClassifier
+#import matplotlib.pyplot as plt
 
 
 class MachineLearning():
@@ -38,102 +42,6 @@ class MachineLearning():
         
         return finalValue
 
-    def colorSeparation(self, croppedCard):
-        '''
-        Finding the dominant colors of
-        the card using KMeans clusters.
-        This will return an r,g,b tuple.
-        '''
-        #converting the card image to RGB
-        #print(type(croppedCard)) #debug
-        croppedCard = cv2.cvtColor(croppedCard, cv2.COLOR_BGR2RGB)
-
-        height, width, _ = np.shape(croppedCard)
-
-        #reshaping the image to be a simple list of rgb pixels
-        image = np.float32(croppedCard.reshape(height * width, 3))
-
-        #define the criteria for KMeans
-        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 1.0)
-
-        num_clusters = 3
-        attempts = 100
-        
-        ret, label, center = cv2.kmeans(image,num_clusters,None,criteria,attempts,cv2.KMEANS_PP_CENTERS)
-
-        #converting the center of data back into uint8
-        center = np.uint8(center)
-        for r,g,b in center:
-            if (r < 60) and (g < 60) and (b < 60): ##THIS CAN BE OPTIMIZED TO 2 LINES
-                # print(f'{r = } {g = } {b = }')
-                # print('black')
-                pass
-            elif (r > 190) and (g > 190) and (b > 190):
-                # print(f'{r = } {g = } {b = }')
-                # print('white')
-                pass
-            else:
-                #print(f'{r = } {g = } {b = }')
-                return (r,g,b)
-
-    def getCardColor(self, croppedCard):
-        '''
-        This method will be returning a string
-        with the color of the card in 
-        all lower case letters.
-        '''
-        #setting ranges for all possible card colors in rgb
-        red_lower = (232,57,28)
-        red_upper = (255,81,52)
-
-        green_lower = (20,51,43)
-        green_upper = (65,255,71)
-
-        blue_lower = (9,113,234)
-        blue_upper = (39,145,255)
-
-        yellow_lower = (210,162,40)
-        yellow_upper = (255,200,70)
-        
-        r,g,b = self.colorSeparation(croppedCard)
-
-        #next section code which is commented out can be used for putting the text on the cards:
-        # textColor = (255,255,255)
-        # fontScale = 1
-        # font = cv2.FONT_HERSHEY_SIMPLEX
-        # org = (50,50)
-
-        if (r in range(red_lower[0], red_upper[0])) and (g in range(red_lower[1], red_upper[1])) and (b in range(red_lower[2], red_upper[2])):
-            # cv2.putText(croppedCard, 'RED', org, font, fontScale, textColor, 2, cv2.LINE_AA)
-            # cv2.imshow('color finder', croppedCard)
-            # cv2.waitKey(0)
-            # cv2.destroyWindow('color finder')
-            return 'red'
-        elif (r in range(green_lower[0], green_upper[0])) and (g in range(green_lower[1], green_upper[1])) and (b in range(green_lower[2], green_upper[2])):
-            # cv2.putText(croppedCard, 'GREEN', org, font, fontScale, textColor, 2, cv2.LINE_AA)
-            # cv2.imshow('color finder', croppedCard)
-            # cv2.waitKey(0)
-            # cv2.destroyWindow('color finder')
-            return 'green'
-        elif (r in range(blue_lower[0], blue_upper[0])) and (g in range(blue_lower[1], blue_upper[1])) and (b in range(blue_lower[2], blue_upper[2])):
-            # cv2.putText(croppedCard, 'BLUE', org, font, fontScale, textColor, 2, cv2.LINE_AA)
-            # cv2.imshow('color finder', croppedCard)
-            # cv2.waitKey(0)
-            # cv2.destroyWindow('color finder')
-            return 'blue'
-        elif (r in range(yellow_lower[0], yellow_upper[0])) and (g in range(yellow_lower[1], yellow_upper[1])) and (b in range(yellow_lower[2], yellow_upper[2])):
-            # cv2.putText(croppedCard, 'YELLOW', org, font, fontScale, textColor, 2, cv2.LINE_AA)
-            # cv2.imshow('color finder', croppedCard)
-            # cv2.waitKey(0)
-            # cv2.destroyWindow('color finder')
-            return 'yellow'
-        else:
-            # cv2.putText(croppedCard, 'BLACK', org, font, fontScale, textColor, 2, cv2.LINE_AA)
-            # cv2.imshow('color finder', croppedCard)
-            # cv2.waitKey(0)
-            # cv2.destroyWindow('color finder')
-            return 'black'
-
     def getVideoStream(self):
         vc = cv2.VideoCapture(0)
         desList = self.ip.findKeyDes()
@@ -141,6 +49,7 @@ class MachineLearning():
         while True:
             rval, frame = vc.read()
             imgOriginal = frame.copy()
+            imgDetected = frame.copy()
             frame = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
             
             
@@ -151,19 +60,31 @@ class MachineLearning():
             key = cv2.waitKey(1)
             
             if (key == 27):
-                cv2.imwrite('./test_images/saved.jpg', frame)
+                cv2.imwrite('./test_images/saved.jpg', imgDetected)
                 saved = cv2.imread('./test_images/saved.jpg')
 
                 id = self.findID(saved, desList)
 
-                color = self.ip.findColor(imgOriginal)
+                croppedCard = self.ip.cropCards(saved)
+
+                #color = self.ip.findColor(imgOriginal)
+
+                #get color
+                #print(croppedCard.shape)
+                color_bar, _ = self.getCardColorNew(croppedCard)
+                #find color name of cropped card:
+                color_name = self.colorNameDetection(croppedCard)
 
 
                 if id != -1:
                     if id not in range(13,17): #if it's not a black special card, put color text on image
-                        cv2.putText(saved, color, (30,50), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
-                    cv2.putText(saved, self.targetNames[id], (150,50), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
-                    print(self.targetNames[id])
+                        #cv2.putText(saved, color, (30,50), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
+                        x_offset=y_offset=60
+                        saved[y_offset:y_offset+color_bar.shape[0], x_offset:x_offset+color_bar.shape[1]] = color_bar  
+                        cv2.putText(saved, f'{color_name} {self.targetNames[id]}', (150,50), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
+                    else:
+                        cv2.putText(saved, f'{self.targetNames[id]}', (150,50), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
+                    #print(self.targetNames[id])
                 else:
                     cv2.putText(saved, 'Not detected, please try again!', (50,50), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2)
 
@@ -175,7 +96,114 @@ class MachineLearning():
                 cv2.destroyAllWindows()
                 vc.release()
                 break
+    def getCardColorNew(self,croppedCard):
+        
+        def find_histogram(clt):
+            """
+            create a histogram with k clusters
+            :param: clt
+            :return:hist
+            """
+            numLabels = np.arange(0, len(np.unique(clt.labels_)) + 1)
+            (hist, _) = np.histogram(clt.labels_, bins=numLabels)
+        
+            hist = hist.astype("float")
+            hist /= hist.sum()
+        
+            return hist
+        def plot_colors2(hist, centroids):
+            bar = np.zeros((50, 300, 3), dtype="uint8")
+            startX = 0
+        
+            for (percent, color) in zip(hist, centroids):
+                # plot the relative percentage of each cluster
+                endX = startX + (percent * 300)
+                cv2.rectangle(bar, (int(startX), 0), (int(endX), 50),
+                              color.astype("uint8").tolist(), -1)
+                startX = endX
 
+            #find index of most dominant color:
+            most_dominant_index = np.where(hist==max(hist))
+            
+            #find most dominant color in BGR:
+            #print(centroids[most_dominant_index][0]) #debug
+            b,g,r = int(centroids[most_dominant_index][0][0]), int(centroids[most_dominant_index][0][1]), int(centroids[most_dominant_index][0][2])
+            
+            most_dominant_color = (b,g,r)
+
+            # return the bar chart
+            return bar, most_dominant_color
+        
+        #img = croppedCard#cv2.imread("pic/img7.jpeg")
+        #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        
+        img = croppedCard.reshape((croppedCard.shape[0] * croppedCard.shape[1],3)) #represent as row*column,channel number
+        #print(img.shape)
+        clt = KMeans(n_clusters=3) #cluster number
+
+        try:
+            clt.fit(img)
+            hist = find_histogram(clt)
+            bar, color_bgr = plot_colors2(hist, clt.cluster_centers_)
+            return bar, color_bgr
+
+        except Exception as e:
+            print(f'Please close the windows and try again, card is not being cropped correctly - {e}')
+        
+        
+    
+    ##K nearest neighbours for name of the color detection
+    def colorNameDetection(self, croppedCard):
+        '''
+        Color name detection with Knn classifier.
+        '''
+        def writeClassifier():
+            #load x train data:
+            x_train = []
+            #load y train data, blue = 0, green = 1, black = 2, red = 3, yellow = 4
+            y_train = [
+                0,0,0,0,0,0,0,0,0,0,0,0,0,
+                1,1,1,1,1,1,1,1,1,1,1,1,1,
+                2,2,2,2,
+                3,3,3,3,3,3,3,3,3,3,3,3,3,
+                4,4,4,4,4,4,4,4,4,4,4,4,4,
+            ]
+            for image in self.ip.cvImages:
+                cropped = self.ip.cropCards(image)
+                _, (b,g,r) = self.getCardColorNew(cropped)
+                x_train.append((b,g,r))
+
+
+            #create classifier:
+            clf = KNeighborsClassifier(2)
+            clf.fit(x_train, y_train)
+
+            #save the model in a pcikle file after training
+            pickle.dump(clf, open('color_classifier.p', 'wb'))
+        
+        #writeClassifier() #write the classifier if more training data is acquired
+
+        clf = pickle.load(open('color_classifier.p', 'rb')) #load the model to test it
+
+        _, (b,g,r) = self.getCardColorNew(croppedCard) 
+        #print((b,g,r))
+        y_predict = clf.predict([(b,g,r)])
+        
+        if y_predict[0] == 0:
+            return 'blue'
+        elif y_predict[0] == 1:
+            return 'green'
+        elif y_predict[0] == 2:
+            return 'black'
+        elif y_predict[0] == 3:
+            return 'red'
+        elif y_predict[0] == 4:
+            return 'yellow'
+        else:
+            return 'name of color not detected'
+
+        
+    
 
     
 

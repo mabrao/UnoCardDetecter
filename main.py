@@ -35,24 +35,36 @@ class Gui():
             filetypes= filetypes
         )
 
-        print(filename)
+        #print(filename)
         cvImage = cv2.imread(filename)
         cvGrey = cv2.cvtColor(cvImage,cv2.COLOR_BGR2GRAY)
+
+        #resize image:
+        #print(f'width = {cvImage.shape[1]} height = {cvImage.shape[0]}')
+        #dimensions = (640,480)
+        #cvImage = cv2.resize(cvImage, dimensions, interpolation=cv2.INTER_AREA)
 
         ##Color detection using kmeans clustering##
         #crop card:
         croppedCard = self.ml.ip.cropCards(cvImage)
+        #print(croppedCard.shape)
         #get color
-        color = self.ml.getCardColor(croppedCard)
+        color_bar, _ = self.ml.getCardColorNew(croppedCard)
+        #find color name of cropped card:
+        color_name = self.ml.colorNameDetection(croppedCard)
 
         ## apply ORB on image file
         desList = self.ml.ip.findKeyDes() #get description list of each train image
         id = self.ml.findID(cvGrey, desList) #get id of grey input image
+        
+        
 
         if id != -1:
             if id not in range(13,17): #if it's not a black special card, put color text on image
-                cv2.putText(cvImage, color, (30,50), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
-            cv2.putText(cvImage, self.ml.targetNames[id], (150,50), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
+                #cv2.putText(cvImage, color, (30,50), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
+                x_offset=y_offset=60
+                cvImage[y_offset:y_offset+color_bar.shape[0], x_offset:x_offset+color_bar.shape[1]] = color_bar            
+            cv2.putText(cvImage, f'{color_name} {self.ml.targetNames[id]}', (150,50), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
             #print(self.ml.targetNames[id]) #debug
         else:
             cv2.putText(cvImage, 'Not detected, please try again!', (50,50), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2)
@@ -67,6 +79,3 @@ if __name__ == '__main__':
     window = Gui()
     window.executeWindow()
     
-    #ml.videoStream()
-    # ml.getVideoStream()
-    # ml.ip.findColor(ml.ip.cvImages[35])

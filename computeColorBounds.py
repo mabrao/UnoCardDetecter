@@ -1,8 +1,3 @@
-##THIS CAN BE RUN INSIDE MACHINE_LERARNING.py
-##IT WILL BREAK IF RAN HERE
-
-
-
 #code used for computing all bounds (not nescessary to run every time)
 #easier to just hard code the bounds after finding them
 def computeColorBounds(self):
