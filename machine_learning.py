@@ -14,18 +14,26 @@ class MachineLearning():
         self.ip = image_processing.ImageProcessing()
         self.targetNames = ['0', '1', '2', '3', '4', '5', 
                         '6', '7', '8', '9', 'Reverse', 'Stop','Draw 2', 
-                        'Black Blank', 'Black Swap Hands', 'Black Draw 4', 'Black Wild Card']
+                        'Black Blank', 'Black Swap Hands', 'Black Draw 4', 'Black Wild Card',
+                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Reverse', 'Stop','Draw 2',]
 
 
     def findID(self, videoCapture, desList, threshold = 7):
-        #kp2,des2 = self.ip.createOrbCard(videoCapture)
-        orb = cv2.ORB_create(nfeatures=1000)
-        kp2,des2 = orb.detectAndCompute(videoCapture, None)
-        bf = cv2.BFMatcher()
-        desList = self.ip.findKeyDes()
+        '''
+        This method receives the image to be compared with (video capture,
+        but it can also be an input image). The description list for each train
+        image and a threshold value to determine if it is a good match or not.
+        It returns the final value (ID), which is used to determine which card it is.
+        '''
+        orb = cv2.ORB_create(nfeatures=1000) #create the ORB with 1000 features
+        #get keypoints and description for the input image or video fram
+        kp2,des2 = orb.detectAndCompute(videoCapture, None) 
+        bf = cv2.BFMatcher() #create the brute force matcher
+        desList = self.ip.findKeyDes() #load the description list
         matchList = []
-        finalValue = -1
+        finalValue = -1 #this variable starts as -1 in case there is no relevant matches
         try:
+            #get the most matches with each card in the description list
             for des in desList:
                 matches = bf.knnMatch(des,des2, k=2)
                 goodMatches = []
@@ -52,7 +60,7 @@ class MachineLearning():
             imgDetected = frame.copy()
             frame = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
             
-            
+            #creating a menu for the video capturing
             cv2.putText(imgOriginal, '-Press esc to detect card', (50,50), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
             cv2.putText(imgOriginal, '-Press space to end program', (50,80), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
             cv2.imshow('frame', imgOriginal)
@@ -97,13 +105,20 @@ class MachineLearning():
                 vc.release()
                 break
     def getCardColorNew(self,croppedCard):
+        '''
+        This method receives a cropped card
+        as an input and returns a bar graph with
+        the most dominant colors which will be placed
+        in the output window and the BGR of the most
+        dominant color.
+        '''
         
         def find_histogram(clt):
-            """
+            '''
             create a histogram with k clusters
             :param: clt
             :return:hist
-            """
+            '''
             numLabels = np.arange(0, len(np.unique(clt.labels_)) + 1)
             (hist, _) = np.histogram(clt.labels_, bins=numLabels)
         
@@ -131,16 +146,16 @@ class MachineLearning():
             
             most_dominant_color = (b,g,r)
 
-            # return the bar chart
             return bar, most_dominant_color
         
-        #img = croppedCard#cv2.imread("pic/img7.jpeg")
-        #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         
+        #print(f'height = {img.shape[0]}, width = {img.shape[1]}') #debug
         img = croppedCard.reshape((croppedCard.shape[0] * croppedCard.shape[1],3)) #represent as row*column,channel number
-        #print(img.shape)
+        #print(img.shape) #debug
         clt = KMeans(n_clusters=3) #cluster number
 
+        #using this try statement because sometimes the card is not cropped correctly and the kmeans cluster does not work as expected
+        #because of the length of the image array
         try:
             clt.fit(img)
             hist = find_histogram(clt)
