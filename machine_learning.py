@@ -2,7 +2,6 @@ import image_processing
 import numpy as np
 import cv2
 import pickle
-from reusable_functions import getCardColor
 from sklearn.cluster import KMeans
 from sklearn.neighbors import KNeighborsClassifier
 #import matplotlib.pyplot as plt
@@ -15,7 +14,7 @@ class MachineLearning():
         self.targetNames = ['0', '1', '2', '3', '4', '5', 
                         '6', '7', '8', '9', 'Reverse', 'Stop','Draw 2', 
                         'Black Blank', 'Black Swap Hands', 'Black Draw 4', 'Black Wild Card',
-                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Reverse', 'Stop','Draw 2',]
+                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Reverse', 'Stop','Draw 2']
 
 
     def findID(self, videoCapture, desList, threshold = 7):
@@ -67,7 +66,7 @@ class MachineLearning():
             
             key = cv2.waitKey(1)
             
-            if (key == 27):
+            if (key == 27): #ESC is pressed
                 cv2.imwrite('./test_images/saved.jpg', imgDetected)
                 saved = cv2.imread('./test_images/saved.jpg')
 

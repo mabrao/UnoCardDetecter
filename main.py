@@ -70,7 +70,7 @@ class Gui():
         cv2.imshow('classified image', cvImage) #showing the card already detected
     
     def executeWindow(self):
-        #exectue the GUI
+        #execute the GUI
         self.configWindow()
         self.window.mainloop()
 

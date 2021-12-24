@@ -1,5 +1,5 @@
 '''
-Uno Card Detecter by Matheus Abrao
+Uno Card Detecter by Matheus Abrao.
 '''
 
 import cv2
